@@ -27,63 +27,85 @@ const int button2Pin = 8;
 // delete
 const int button3Pin = 9;
 
+const int ledPin = 13;
+
+String cur_eq_item;
+
 void setup() {
   // initialize the pushbutton pins as an input:
   pinMode(button1Pin, INPUT);
   pinMode(button2Pin, INPUT);
   pinMode(button3Pin, INPUT);
+  pinMode(ledPin, OUTPUT);
   
+  Serial.begin(9600);
+  lcd.begin(16,2);
   lcd.clear();
   lcd.print("<< Welcome! >>");
-  lcd.begin(16,2);
-  // removed createChar call
-  lcd.clear();
 }
 
 void loop() {
   // main code
   // start in the top left
   // won't this just keep resetting?
-  lcd.setCursor(0, 0);
+  lcd.setCursor(15, 0);
   check_click();
+  delay(100);
 }
 
 //function that checks the clicked the button.
 void check_click(){
-
+  int button1State = digitalRead(button1Pin);
+  int button2State = digitalRead(button2Pin);
+  int button3State = digitalRead(button3Pin);
+  
   // input mode
-  if (digitalRead(button1Pin) == LOW){
-
+  if (button1State == LOW){
     // cycle back around if you get to the end of char_ops
-    if (char_index == char_ops.length()) {
+    if (char_index == (sizeof(char_ops) / sizeof(char))) {
       char_index = -1;
-    }
-    char_index =+ 1;
+    }  
+    char_index += 1;
+    //Serial.println(char_index);
     // get next character from char_ops and display on screen
-    lcd.print(equation.substring(0, equation.length()-1) + char_ops[char_index]);
+    lcd.clear();
+    cur_eq_item = char_ops[char_index];
+    lcd.print(equation + cur_eq_item);
   }
 
   // enter
-  if (digitalRead(button2Pin) == LOW){
-
-    if (equation.charAt(equation.length()-1) != 'S') {
-      // re-init char_index, so that when the user enters a new character, they must start from
-      // the beginning of char_ops again
-      char_index = -1;
-
-      // need to add a condition here for solving equation
-      lcd.print(equation + " ");
-    } else {
-      int result = calc_result(equation);
-      lcd.print(result);
-    }    
+  if (button2State == LOW){    
+    if (cur_eq_item.length() > 0) {
+      Serial.println("current equation item: " + cur_eq_item);
+      equation = equation + cur_eq_item;
+      Serial.println("equation: " + equation);
+      cur_eq_item = "";   
+      if (equation.charAt(equation.length()-1) != 'S') {
+        // re-init char_index, so that when the user enters a new character, they must start from
+        // the beginning of char_ops again
+        char_index = -1;
+        // need to add a condition here for solving equation
+        lcd.clear();
+        
+        lcd.print(equation);
+      } else {
+        int result = calc_result(equation);
+        lcd.clear();
+        lcd.print(result);
+      }  
+    }
   }
 
   // delete
-  if (digitalRead(button2Pin) == LOW) {
+  if (button3State == LOW) {
     // delete the last character in the equation string
-    equation = equation.substring(0, equation.length());
-    lcd.print(equation);
+    if (equation.length() > 1) {
+          equation = equation.substring(0, equation.length());
+          lcd.print(equation);
+    } else {
+      lcd.clear();
+    }
+
   }
 }
 
