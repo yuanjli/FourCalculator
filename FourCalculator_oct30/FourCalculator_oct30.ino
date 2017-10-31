@@ -53,6 +53,11 @@ void check_click(){
 
   // input mode
   if (digitalRead(button1Pin) == LOW){
+
+    // cycle back around if you get to the end of char_ops
+    if (char_index == char_ops.length()) {
+      char_index = -1;
+    }
     char_index =+ 1;
     // get next character from char_ops and display on screen
     lcd.print(equation.substring(0, equation.length()-1) + char_ops[char_index]);
@@ -108,6 +113,7 @@ int calc_result(String equation) {
       
     } else {
         // get everything between the last operator found and the current operator (at index j)
+        // store this as the current number and determine how to handle it, in relation to the running result
         curr_num = equation.substring(last_op_index+1,j).toInt();
         switch(last_op) {
           case '+': // add
